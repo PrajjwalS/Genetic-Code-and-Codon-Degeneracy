@@ -1,5 +1,9 @@
 package com.company;
+import org.sqlite.SQLiteException;
+
 import java.io.*;
+import java.sql.*;
+
 public class Main {
 
     public static void main(String[] args) throws IOException {
@@ -70,7 +74,7 @@ public class Main {
         mapping[3][3][2]='G';
         mapping[3][3][3]='G';
 
-        File file = new File("/home/pdawg/Desktop/Practicals/SE/Genetic-Code-and-Codon-Degeneracy/Ecol_K12_MG1655_.ena");
+        File file = new File("/home/saurabh/Documents/6th sem/SE/Genetic-Code-and-Codon-Degeneracy/Ecol_K12_MG1655_.ena");
         BufferedReader br = new BufferedReader(new FileReader(file));
 
   long geneLen=0;
@@ -80,9 +84,37 @@ public class Main {
 
   while((readLine=br.readLine())!=null){
       if(readLine.charAt(0)=='>'){
-          if(geneName!="")
+          if(!geneName.equals(""))
           {
               //TODO store all this in DB
+              Connection connection = null;
+              try{
+                  connection = DriverManager.getConnection("jdbc:sqlite:/home/saurabh/Documents/6th sem/SE/Genetic-Code-and-Codon-Degeneracy/geneInfo.db");
+                  Statement statement = connection.createStatement();
+                  statement.execute("CREATE TABLE IF NOT EXISTS gene"+
+                                        "(Gene_name VARCHAR, Gene_seq VARCHAR,Length INTEGER(6),Remarks VARCHAR )");
+                  // now adding data to the database
+                  String sql = "INSERT INTO gene(Gene_name,Gene_seq,Length,Remarks)"+
+                          "VALUES(?,?,?,'Valid')";
+                  // currently setting by default Valid for Remarks!
+                  PreparedStatement pstatement = connection.prepareStatement(sql);
+                  pstatement.setString(1,geneName);
+                  pstatement.setString(2,AAseq);
+                  pstatement.setLong(3,geneLen);
+                  pstatement.executeUpdate();
+
+                  System.out.println("It worked!");
+              }catch (SQLException e){
+                  System.out.println("Something went wrong!");
+                  e.printStackTrace();
+              }finally {
+                  try {
+                      connection.close();
+                  }catch (SQLException e){
+                      e.printStackTrace();
+                  }
+              }
+
               System.out.println("Gene Name:"+geneName+"\ngene Len:"+geneLen+"\nAAseq Generated:"+AAseq+"\n\n");
               //restoring the defaults
               geneLen=0;
