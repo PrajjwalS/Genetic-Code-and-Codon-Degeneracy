@@ -1,5 +1,4 @@
 package com.company;
-import org.sqlite.SQLiteException;
 
 import java.io.*;
 import java.sql.*;
@@ -81,57 +80,84 @@ public class Main {
   String geneName="";
   String AAseq="";
   String readLine="";
+  String remark="ALL GOOD";
+  boolean valid=true;
 
-  while((readLine=br.readLine())!=null){
-      if(readLine.charAt(0)=='>'){
-          if(!geneName.equals(""))
-          {
+  while((readLine=br.readLine())!=null) {
+      if (readLine.charAt(0) == '>') {
+          if (!geneName.equals("")) {
               //TODO store all this in DB
               Connection connection = null;
-              try{
+              try {
                   connection = DriverManager.getConnection("jdbc:sqlite:/home/saurabh/Documents/6th sem/SE/Genetic-Code-and-Codon-Degeneracy/geneInfo.db");
                   Statement statement = connection.createStatement();
-                  statement.execute("CREATE TABLE IF NOT EXISTS gene"+
-                                        "(Gene_name VARCHAR, Gene_seq VARCHAR,Length INTEGER(6),Remarks VARCHAR )");
+                  statement.execute("CREATE TABLE IF NOT EXISTS gene" +
+                          "(Gene_name VARCHAR, Gene_seq VARCHAR,Length INTEGER(6),Remarks VARCHAR )");
                   // now adding data to the database
-                  String sql = "INSERT INTO gene(Gene_name,Gene_seq,Length,Remarks)"+
+                  String sql = "INSERT INTO gene(Gene_name,Gene_seq,Length,Remarks)" +
                           "VALUES(?,?,?,'Valid')";
                   // currently setting by default Valid for Remarks!
                   PreparedStatement pstatement = connection.prepareStatement(sql);
-                  pstatement.setString(1,geneName);
-                  pstatement.setString(2,AAseq);
-                  pstatement.setLong(3,geneLen);
+                  pstatement.setString(1, geneName);
+                  pstatement.setString(2, AAseq);
+                  pstatement.setLong(3, geneLen);
                   pstatement.executeUpdate();
 
                   System.out.println("It worked!");
-              }catch (SQLException e){
+              } catch (SQLException e) {
                   System.out.println("Something went wrong!");
                   e.printStackTrace();
-              }finally {
+              } finally {
                   try {
                       connection.close();
-                  }catch (SQLException e){
+                  } catch (SQLException e) {
                       e.printStackTrace();
                   }
               }
 
-              System.out.println("Gene Name:"+geneName+"\ngene Len:"+geneLen+"\nAAseq Generated:"+AAseq+"\n\n");
+              System.out.println("Gene Name:" + geneName + "\ngene Len:" + geneLen + "\nAAseq Generated:" + AAseq + "\n\n");
               //restoring the defaults
-              geneLen=0;
-              AAseq="";
+              geneLen = 0;
+              AAseq = "";
+              valid = true;
+              remark = "ALL GOOD";
           }
-          geneName=readLine;
-      }
-      else{
-          for(int i=0;i<readLine.length();i+=3){
-              //TODO insert error check
+          geneName = readLine;
+      } else {
+          geneLen += readLine.length();
+          if (valid ) {
 
-              AAseq+=mapping[binding(readLine.charAt(i))][binding(readLine.charAt(i+1))][binding(readLine.charAt(i+2))];
-              geneLen+=3;
-          } 
+              for (int i = 0; i < readLine.length(); i += 3) {
+
+                  int x, y, z;
+                  try {
+                      x = binding(readLine.charAt(i));
+                      y = binding(readLine.charAt(i + 1));
+                      z = binding(readLine.charAt(i + 2));
+                  } catch (IndexOutOfBoundsException e) {
+                      x = -999;
+                      y = -111;
+                      z = -999;
+                  }
+                  //debug:: System.out.println("seq:"+readLine.charAt(i)+readLine.charAt(i+1)+readLine.charAt(i+2)+":");
+                  if (x == -999 || y == -999 || z == -999) {
+
+                      AAseq = "INVALID";
+                      if (y != -111)
+                          remark = "INVALID GENE CODE near index:" + i + "-" + (i + 2);
+                      else
+                          remark = "INVALID LENGTH";
+                      valid = false;
+                      break;
+                  } else {
+                      AAseq += mapping[x][y][z];
+
+                  }
+              }
+          }
       }
   }
-        System.out.println("Gene Name:"+geneName+"\ngene Len:"+geneLen+"\nAAseq Generated:"+AAseq+"\n\n");
+      System.out.println("Gene Name:" + geneName + "\ngene Len:" + geneLen + "\nAAseq Generated:" + AAseq + "\n\n");
 
 
     }
