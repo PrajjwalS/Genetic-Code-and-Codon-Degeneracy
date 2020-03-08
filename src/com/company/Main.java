@@ -1,12 +1,14 @@
 package com.company;
 
+import java.awt.*;
 import java.io.*;
 import java.sql.*;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 
 public class Main {
-    private static HashMap<Character, Long> freq = new HashMap<>();
+    private static Map<Character, Long> freq = new HashMap<>();
 
     public static void main(String[] args) throws IOException {
         freq.put('A', 0L);
@@ -110,8 +112,7 @@ public class Main {
         String readLine = "";
         String remark = "ALL GOOD";
         boolean valid = true;
-
-        while ((readLine = br.readLine()) != null) {
+        while ((readLine = br.readLine()) != null  ) {
             if (readLine.charAt(0) == '>') {
                 if (!geneName.equals("")) {
                     //TODO store all this in DB
@@ -132,7 +133,7 @@ public class Main {
                         pstatement.executeUpdate();
 
                     } catch (SQLException e) {
-                        System.out.println("Something went wrong!");
+//                        System.out.println("Something went wrong!");
                         e.printStackTrace();
                     } finally {
                         try {
@@ -141,7 +142,7 @@ public class Main {
                             e.printStackTrace();
                         }
                     }
-                    System.out.println("Gene Name:" + geneName + "\ngene Len:" + geneLen + "\nAAseq Generated:" + AAseq + "\n\n");
+//                    System.out.println("Gene Name:" + geneName + "\ngene Len:" + geneLen + "\nAAseq Generated:" + AAseq + "\n\n");
                     // analyzing the amino acid seq:
                   //  analyse(AAseq);
                     //restoring the defaults
@@ -204,6 +205,12 @@ public class Main {
 
         // handling stats
         System.out.println(freq.toString());
+        EventQueue.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                new DrawHistogram(freq);
+            }
+        });
 
 
     }
